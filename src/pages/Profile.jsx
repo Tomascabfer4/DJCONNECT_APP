@@ -17,9 +17,7 @@ import {
 } from "lucide-react";
 
 export default function Profile() {
-  // CORRECCIÓN 1: Quitamos 'user' y 'login' porque no los usamos aquí
   const { isDJ } = useAuth();
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("cuenta"); // "cuenta" | "artista"

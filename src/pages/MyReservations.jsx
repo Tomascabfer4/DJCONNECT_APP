@@ -14,7 +14,7 @@ import {
   Star,
 } from "lucide-react";
 
-// 🛠️ HELPER: Convertir fecha
+// HELPER: Convertir fecha
 const parseDate = (dateStr) => {
   if (!dateStr) return new Date();
   if (dateStr.includes("/")) {
@@ -34,7 +34,7 @@ export default function MyReservations() {
   const { isDJ } = useAuth();
   const navigate = useNavigate();
 
-  // 🌟 ESTADOS PARA EL MODAL DE VALORACIÓN
+  // ESTADOS PARA EL MODAL DE VALORACIÓN
   const [reviewModal, setReviewModal] = useState({
     open: false,
     reservaId: null,
@@ -75,7 +75,7 @@ export default function MyReservations() {
     }
   };
 
-  // 🌟 ENVIAR LA VALORACIÓN AL BACKEND
+  // ENVIAR LA VALORACIÓN AL BACKEND
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     setSubmittingReview(true);
@@ -290,7 +290,7 @@ export default function MyReservations() {
         </div>
       )}
 
-      {/* 🌟 MODAL DE VALORACIÓN 🌟 */}
+      {/* MODAL DE VALORACIÓN */}
       {reviewModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="glass-panel p-8 rounded-3xl max-w-md w-full border border-white/10 relative shadow-2xl">

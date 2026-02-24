@@ -1,6 +1,9 @@
 import axios from "axios";
 
-// 🌍 URL DE PRODUCCIÓN
+// ==========================================
+// CONFIGURACIÓN GLOBAL DE AXIOS
+// ==========================================
+// Todas las peticiones saldrán hacia este dominio base.
 const API_URL = "https://djconnect-api.onrender.com/api";
 
 const api = axios.create({
@@ -10,7 +13,11 @@ const api = axios.create({
   },
 });
 
-// 🔒 Interceptor: Inyectar el Token Automáticamente
+// ==========================================
+// Basicamente aqui lo que hace axios es capturar la peticion, busca el token
+// en el navegador y lo envia al backend, para que este sepa quién es el usuario
+// ==========================================
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -19,7 +26,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor de respuesta: Limpiar sesión si el token expira
+// ==========================================
+// Esta es la respuesta del backend, si el backend nos da un error 401
+// axios borra automáticamente el token guardado para "echar" al usuario
+// ==========================================
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -31,38 +41,34 @@ api.interceptors.response.use(
 );
 
 // ==========================================
-// 📡 ENDPOINTS (Actualizados con tu nuevo Backend)
+// Basicamente guardamos todos los endpoints de nuestra API
 // ==========================================
 
 export const authAPI = {
   login: (credentials) => api.post("/Usuarios/login", credentials),
   registerClient: (data) => api.post("/Usuarios/registro/cliente", data),
   registerDj: (data) => api.post("/Usuarios/registro/dj", data),
-  getMe: () => api.get("/Usuarios/me"),
+  getMe: () => api.get("/Usuarios/me"), // Recuperar sesión con el token
   getUserById: (id) => api.get(`/Usuarios/${id}`),
   updateProfile: (data) => api.put("/Usuarios/perfil", data),
   deactivateAccount: () => api.delete("/Usuarios/desactivar-cuenta"),
   uploadPhoto: (formData) =>
     api.put("/Usuarios/perfil/foto", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { "Content-Type": "multipart/form-data" }, // Para enviar archivos físicos
     }),
   deletePhoto: () => api.delete("/Usuarios/perfil/foto"),
 };
 
 export const djsAPI = {
   getAll: () => api.get("/DJs"),
-  search: (params) => api.get("/DJs/buscar", { params }),
-
-  // ✅ CAMBIO IMPORTANTE: Ahora usamos tu nuevo endpoint nativo
-  // Esto traerá Bio, Experiencia y Valoración Promedio real
-  getById: (id) => api.get(`/DJs/${id}`),
-
+  search: (params) => api.get("/DJs/buscar", { params }), // Buscador dinámico
+  getById: (id) => api.get(`/DJs/${id}`), // Trae la ficha pública completa
   updateDjProfile: (data) => api.put("/DJs/perfil", data),
 };
 
 export const bookingsAPI = {
   create: (data) => api.post("/Reservas", data),
-  getAllMyBookings: () => api.get("/Reservas"),
+  getAllMyBookings: () => api.get("/Reservas"), // Bandeja de entrada de reservas
   updateStatus: (id, estado) =>
     api.put(`/Reservas/${id}/estado`, JSON.stringify(estado), {
       headers: { "Content-Type": "application/json" },
@@ -86,13 +92,12 @@ export const chatAPI = {
 };
 
 export const statsAPI = {
-  getDashboard: () => api.get("/Stats/dashboard"),
+  getDashboard: () => api.get("/Stats/dashboard"), // Estadísticas del panel DJ
 };
 
 export const reviewsAPI = {
   create: (data) => api.post("/Valoraciones", data),
-  // ✅ NUEVO: Añadido para poder listar las opiniones en el perfil
-  getByDj: (djId) => api.get(`/Valoraciones/dj/${djId}`),
+  getByDj: (djId) => api.get(`/Valoraciones/dj/${djId}`), // Lista de opiniones para el perfil del DJ
 };
 
 export default api;

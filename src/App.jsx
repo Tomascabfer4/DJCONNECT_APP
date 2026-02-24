@@ -3,7 +3,9 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Layouts & Pages
+// ==========================================
+// COMPONENTES Y VISTAS (Páginas de la App)
+// ==========================================
 import DashboardLayout from "./layouts/DashboardLayout";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -11,10 +13,14 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import DJDetail from "./pages/DJDetail";
 import Profile from "./pages/Profile";
-import MyReservations from "./pages/MyReservations"; // Asegúrate de importar esto si lo tienes
+import MyReservations from "./pages/MyReservations";
 import Chats from "./pages/Chats";
 import Chat from "./pages/Chat";
+import Configuration from "./pages/Configuration";
 
+// ==========================================
+// Espera hasta que se haga el logueo, si no loguea manda al login
+// ==========================================
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -22,6 +28,9 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// ==========================================
+// Si ya estas logueado, te manda al dashboard
+// ==========================================
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
   if (user) return <Navigate to="/dashboard" />;
@@ -30,10 +39,14 @@ const PublicRoute = ({ children }) => {
 
 function App() {
   return (
+    // BrowserRouter habilita la navegación de "Single Page Application" (sin recargar la web)
     <BrowserRouter>
+      {/* Envolvemos con AuthProvider para que cualquier componente pueda acceder a 'useAuth()' */}
       <AuthProvider>
         <Routes>
-          {/* Rutas Públicas */}
+          {/* ==========================================
+              RUTAS PÚBLICAS (Para usuarios sin sesión)
+              ========================================== */}
           <Route
             path="/"
             element={
@@ -59,7 +72,10 @@ function App() {
             }
           />
 
-          {/* Rutas Privadas */}
+          {/* ==========================================
+              RUTAS PRIVADAS (Solo usuarios registrados)
+              Envuelto en el DashboardLayout para que tenga el menú lateral
+              ========================================== */}
           <Route
             element={
               <ProtectedRoute>
@@ -67,19 +83,23 @@ function App() {
               </ProtectedRoute>
             }
           >
+            {/* Todas estas rutas se inyectan en el <Outlet /> del DashboardLayout */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/perfil" element={<Profile />} />
-            {/* Si ya creamos MyReservations, úsala aquí. Si no, déjalo como el div que tenías */}
             <Route path="/reservas" element={<MyReservations />} />
             <Route path="/chats" element={<Chats />} />
             <Route path="/chat/:reservaId" element={<Chat />} />
+            <Route path="/configuracion" element={<Configuration />} />
             <Route path="/dj/:id" element={<DJDetail />} />
           </Route>
 
-          {/* Fallback */}
+          {/* ==========================================
+              Para devolver al inicio de la app si se introduce una URL que no existe
+              ========================================== */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
 
+        {/* Para poder lanzar un toast desde cualquier componente */}
         <ToastContainer
           position="bottom-right"
           theme="dark"

@@ -68,11 +68,11 @@ export default function DJDetail() {
 
     setSubmitting(true);
     try {
-      // ✅ 1. Enviamos la fecha y hora "local" (sin la Z al final)
+      // 1. Enviamos la fecha y hora "local" (sin la Z al final)
       // Esto evita que JavaScript reste una hora al convertir a UTC
       const fechaHoraLocal = `${fecha}T${horaInicio}:00`;
 
-      // ✅ 2. Enviamos el horario solo como el número de horas (ej: "2", "3")
+      // 2. Enviamos el horario solo como el número de horas (ej: "2", "3")
       // Esto permite que el backend haga el cálculo de: Precio * Horas
       await bookingsAPI.create({
         djId: parseInt(id),

@@ -72,7 +72,7 @@ export default function Chats() {
             return (
               <div
                 key={chat.id}
-                // ✅ Le pasamos el nombre y la foto "escondidos" en el navigates
+                // Le pasamos el nombre y la foto "escondidos" en el navigates
                 onClick={() =>
                   navigate(`/chat/${chat.id}`, {
                     state: {
@@ -84,7 +84,7 @@ export default function Chats() {
                 className="glass-panel p-5 rounded-2xl border border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all cursor-pointer flex items-center justify-between group"
               >
                 <div className="flex items-center gap-5">
-                  {/* ✅ AVATAR / IMAGEN DE PERFIL */}
+                  {/* AVATAR / IMAGEN DE PERFIL */}
                   <div className="relative shrink-0">
                     <img
                       src={fotoChat}

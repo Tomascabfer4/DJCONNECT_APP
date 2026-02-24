@@ -69,9 +69,6 @@ const ELEMENTS = [
 ];
 
 export default function HeroFloatingElements() {
-  // ELIMINADO: No necesitamos useState ni useEffect.
-  // Al ser datos estáticos, se puede renderizar directamente sin provocar el error.
-
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       {ELEMENTS.map((El, index) => (

@@ -11,7 +11,7 @@ export default function Chat() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // ✅ Obtenemos los datos (nombre y foto) que le pasamos desde Chats.jsx
+  // Obtenemos los datos (nombre y foto) que le pasamos desde Chats.jsx
   const location = useLocation();
   const datosChat = location.state || {}; // Si alguien recarga la página F5, esto será un objeto vacío
 
@@ -69,7 +69,7 @@ export default function Chat() {
       connection
         .start()
         .then(() => {
-          console.log("🟢 Conectado a SignalR");
+          console.log(" Conectado a SignalR");
           connection
             .invoke("UnirseAlGrupo", reservaId.toString())
             .catch((err) => console.error("Error al unirse al grupo:", err));
@@ -125,7 +125,7 @@ export default function Chat() {
 
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-100px)] flex flex-col pb-4 px-4 animate-fade-in">
-      {/* ✅ CABECERA REDISEÑADA CON FOTO Y NOMBRE */}
+      {/* CABECERA REDISEÑADA CON FOTO Y NOMBRE */}
       <div className="flex items-center gap-4 py-4 border-b border-white/10 mb-4 bg-[#0a0a0a]/80 backdrop-blur-md rounded-2xl px-6 sticky top-0 z-10 mt-4 shadow-lg">
         <button
           onClick={() => navigate(-1)}

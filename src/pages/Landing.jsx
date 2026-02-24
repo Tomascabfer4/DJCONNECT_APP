@@ -16,8 +16,6 @@ export default function Landing() {
 
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
-      // CORRECCIÓN AQUÍ: Eliminamos 'const tl = gsap.timeline();' que no se usaba.
-
       // 1. ANIMACIÓN DEL FONDO (EL "APAGADO DE CINE")
       gsap.to(bgRef.current, {
         scrollTrigger: {

@@ -14,16 +14,26 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 
 export default function Register() {
+  // ESTADOS LOCALES (State)
+  // Campos del formulario
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // Por defecto registramos clientes, pero el usuario puede cambiarlo
+
+  // userType: Puede ser "client" o "dj".
+  // Controla colores, imágenes y a qué endpoint de la API llamaremos.
   const [userType, setUserType] = useState("client");
   const [loading, setLoading] = useState(false);
 
+  // CONEXIÓN CONTEXTO: Extraemos la función register del AuthContext.
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  // ==========================================
+  // FUNCIÓN: handleSubmit
+  // FLUJO: Recoge los datos del estado y los envía al AuthContext.
+  // El contexto decidirá si llamar a /registro/cliente o /registro/dj en el backend.
+  // ==========================================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -38,12 +48,16 @@ export default function Register() {
         userType,
       );
 
+      // Notificación personalizada según el rol
       toast.success(
         userType === "dj" ? "¡Bienvenido, Maestro! 🎚️" : "¡Cuenta creada! 🎟️",
       );
+
+      // Tras el registro exitoso, el AuthContext ya nos habrá logueado automáticamente.
       navigate("/");
     } catch (err) {
       console.error(err);
+      // Mostramos el mensaje de error que viene directamente de C# (ej: "El email ya existe").
       toast.error(err.response?.data || "Error al registrarse.");
     } finally {
       setLoading(false);
@@ -52,7 +66,9 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Fondos Animados Dinámicos (Cambian según el rol elegido) */}
+      {/* FONDOS ANIMADOS DINÁMICOS
+          FLUJO: Si eliges DJ, los orbes de luz se vuelven Violetas (Primary). 
+          Si eliges Fan, se vuelven Azules (Secondary). */}
       <div
         className={`absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full blur-3xl animate-pulse transition-colors duration-700 
         ${userType === "dj" ? "bg-primary/30" : "bg-secondary/30"}`}
@@ -63,7 +79,7 @@ export default function Register() {
       />
 
       <div className="flex w-full max-w-5xl h-[700px] glass-panel rounded-3xl overflow-hidden shadow-2xl relative z-10">
-        {/* LADO IZQUIERDO: Formulario */}
+        {/* LADO IZQUIERDO: Formulario de entrada */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-white mb-2">
@@ -72,7 +88,8 @@ export default function Register() {
             <p className="text-gray-400">Elige tu perfil para comenzar.</p>
           </div>
 
-          {/* SELECTOR DE ROL */}
+          {/* SELECTOR DE ROL (User Experience)
+              Cambia el estado 'userType', lo que dispara todas las transiciones visuales de la página. */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <button
               type="button"
@@ -111,6 +128,7 @@ export default function Register() {
             </button>
           </div>
 
+          {/* FORMULARIO */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
               <label className="text-sm font-medium text-gray-300 ml-1">
@@ -173,6 +191,8 @@ export default function Register() {
               </div>
             </div>
 
+            {/* BOTÓN DINÁMICO
+                FLUJO: Cambia su gradiente (Primary vs Secondary) según el rol. */}
             <button
               type="submit"
               disabled={loading}
@@ -199,16 +219,16 @@ export default function Register() {
           </p>
         </div>
 
-        {/* LADO DERECHO: Imagen Decorativa */}
+        {/* LADO DERECHO: Panel Inspiracional (Solo escritorio)
+            FLUJO: Aquí la imagen de fondo y los textos cambian al 100% según el 'userType'. */}
         <div className="hidden md:flex w-1/2 bg-black/40 relative items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-linear-to-br from-black/60 to-transparent z-10" />
 
-          {/* Imagen de fondo que cambia sutilmente */}
           <img
             src={
               userType === "dj"
-                ? "images/FotoRegistroDJ.jpg" // Foto DJ
-                : "images/FotoRegistroFan.avif" // Foto Fiesta/Público
+                ? "images/FotoRegistroDJ.jpg"
+                : "images/FotoRegistroFan.avif"
             }
             alt="Background"
             className="absolute inset-0 w-full h-full object-cover opacity-70 transition-opacity duration-700"
@@ -216,6 +236,7 @@ export default function Register() {
 
           <div className="relative z-20 text-center p-10">
             <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-6 border border-white/20">
+              {/* El vinilo gira más lento para dar un toque elegante */}
               <Disc
                 size={40}
                 className={`animate-spin-slow ${userType === "dj" ? "text-primary" : "text-secondary"}`}
