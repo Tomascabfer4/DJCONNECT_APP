@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { bookingsAPI, reviewsAPI } from "../services/api";
+import { apiReservas, apiValoraciones } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -30,12 +30,12 @@ const parseDate = (dateStr) => {
 
 export default function MyReservations() {
   const [reservas, setReservas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { isDJ } = useAuth();
-  const navigate = useNavigate();
+  const [cargando, setCargando] = useState(true);
+  const { esDJ } = useAuth();
+  const navegar = useNavigate();
 
   // ESTADOS PARA EL MODAL DE VALORACIÓN
-  const [reviewModal, setReviewModal] = useState({
+  const [modalValoracion, setModalValoracion] = useState({
     open: false,
     reservaId: null,
     djName: "",
@@ -43,32 +43,32 @@ export default function MyReservations() {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comentario, setComentario] = useState("");
-  const [submittingReview, setSubmittingReview] = useState(false);
+  const [enviandoValoracion, setEnviandoValoracion] = useState(false);
 
   // Guardamos en memoria las reservas que acabamos de valorar para ocultar el botón
   const [ratedReservas, setRatedReservas] = useState([]);
 
-  const fetchReservas = async () => {
+  const obtenerReservas = async () => {
     try {
-      const { data } = await bookingsAPI.getAllMyBookings();
+      const { data } = await apiReservas.obtenerMisReservas();
       setReservas(data);
     } catch (error) {
       console.error("Error cargando reservas:", error);
       toast.error("No se pudieron cargar las reservas.");
     } finally {
-      setLoading(false);
+      setCargando(false);
     }
   };
 
   useEffect(() => {
-    fetchReservas();
+    obtenerReservas();
   }, []);
 
-  const handleUpdateStatus = async (id, nuevoEstado) => {
+  const manejarActualizarEstado = async (id, nuevoEstado) => {
     try {
-      await bookingsAPI.updateStatus(id, nuevoEstado);
+      await apiReservas.actualizarEstado(id, nuevoEstado);
       toast.success(`Reserva ${nuevoEstado.toLowerCase()} con éxito`);
-      fetchReservas();
+      obtenerReservas();
     } catch (error) {
       console.error("Error al actualizar estado:", error);
       toast.error("Error al cambiar el estado de la reserva");
@@ -76,22 +76,22 @@ export default function MyReservations() {
   };
 
   // ENVIAR LA VALORACIÓN AL BACKEND
-  const handleReviewSubmit = async (e) => {
+  const manejarEnviarValoracion = async (e) => {
     e.preventDefault();
-    setSubmittingReview(true);
+    setEnviandoValoracion(true);
     try {
-      await reviewsAPI.create({
-        reservaId: reviewModal.reservaId,
+      await apiValoraciones.create({
+        reservaId: modalValoracion.reservaId,
         puntuacion: rating,
         comentario: comentario,
       });
       toast.success("¡Gracias! Tu valoración ha sido publicada.");
 
       // Añadimos el ID a la lista local para ocultar el botón instantáneamente
-      setRatedReservas((prev) => [...prev, reviewModal.reservaId]);
+      setRatedReservas((prev) => [...prev, modalValoracion.reservaId]);
 
       // Cerramos y limpiamos el modal
-      setReviewModal({ open: false, reservaId: null, djName: "" });
+      setModalValoracion({ open: false, reservaId: null, djName: "" });
       setRating(5);
       setComentario("");
     } catch (error) {
@@ -105,11 +105,11 @@ export default function MyReservations() {
         typeof errorMsg === "string" &&
         errorMsg.includes("ya ha sido valorada")
       ) {
-        setRatedReservas((prev) => [...prev, reviewModal.reservaId]);
-        setReviewModal({ open: false, reservaId: null, djName: "" });
+        setRatedReservas((prev) => [...prev, modalValoracion.reservaId]);
+        setModalValoracion({ open: false, reservaId: null, djName: "" });
       }
     } finally {
-      setSubmittingReview(false);
+      setEnviandoValoracion(false);
     }
   };
 
@@ -145,7 +145,7 @@ export default function MyReservations() {
     }
   };
 
-  if (loading)
+  if (cargando)
     return (
       <div className="h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -157,7 +157,7 @@ export default function MyReservations() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">Mis Reservas</h1>
         <p className="text-gray-400 mt-2">
-          {isDJ
+          {esDJ
             ? "Gestiona tus próximos bolos y solicitudes."
             : "Seguimiento de tus eventos contratados."}
         </p>
@@ -170,7 +170,7 @@ export default function MyReservations() {
             No tienes reservas
           </h3>
           <p className="text-gray-400">
-            {isDJ
+            {esDJ
               ? "¡Pronto empezarán a llegar las solicitudes!"
               : "Explora el catálogo y contrata a tu primer DJ."}
           </p>
@@ -181,7 +181,7 @@ export default function MyReservations() {
             const fechaReal = parseDate(reserva.fecha);
 
             const canReview =
-              !isDJ &&
+              !esDJ &&
               (reserva.estado?.toLowerCase() === "aceptada" ||
                 reserva.estado?.toLowerCase() === "finalizada") &&
               !ratedReservas.includes(reserva.id);
@@ -205,7 +205,7 @@ export default function MyReservations() {
                         {reserva.estado || "Pendiente"}
                       </span>
                       <h3 className="text-xl font-bold text-white mt-3">
-                        {isDJ
+                        {esDJ
                           ? `Evento de ${reserva.nombreCliente}`
                           : `Reserva con ${reserva.nombreDj}`}
                       </h3>
@@ -238,7 +238,7 @@ export default function MyReservations() {
                 {/* ✅ BOTONES DE ACCIÓN: Sin bordes, centrados y con un ancho mínimo */}
                 <div className="flex sm:flex-col justify-center gap-3 pt-4 sm:pt-0 relative z-10 shrink-0 sm:min-w-[130px]">
                   <button
-                    onClick={() => navigate(`/chat/${reserva.id}`)}
+                    onClick={() => navegar(`/chat/${reserva.id}`)}
                     className="w-full btn-primary bg-white/5 hover:bg-primary/20 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 border border-white/10 transition-all shadow-md"
                   >
                     <MessageSquare size={18} /> Chat
@@ -248,7 +248,7 @@ export default function MyReservations() {
                   {canReview && (
                     <button
                       onClick={() =>
-                        setReviewModal({
+                        setModalValoracion({
                           open: true,
                           reservaId: reserva.id,
                           djName: reserva.nombreDj,
@@ -261,11 +261,11 @@ export default function MyReservations() {
                   )}
 
                   {/* Botones de Aceptar/Rechazar si eres DJ y está pendiente */}
-                  {isDJ && reserva.estado?.toLowerCase() === "pendiente" && (
+                  {esDJ && reserva.estado?.toLowerCase() === "pendiente" && (
                     <div className="flex gap-2 w-full">
                       <button
                         onClick={() =>
-                          handleUpdateStatus(reserva.id, "Aceptada")
+                          manejarActualizarEstado(reserva.id, "Aceptada")
                         }
                         className="flex-1 bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-white p-2 rounded-xl transition-colors flex justify-center border border-green-500/20 shadow-md"
                         title="Aceptar Reserva"
@@ -274,7 +274,7 @@ export default function MyReservations() {
                       </button>
                       <button
                         onClick={() =>
-                          handleUpdateStatus(reserva.id, "Rechazada")
+                          manejarActualizarEstado(reserva.id, "Rechazada")
                         }
                         className="flex-1 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white p-2 rounded-xl transition-colors flex justify-center border border-red-500/20 shadow-md"
                         title="Rechazar Reserva"
@@ -291,12 +291,12 @@ export default function MyReservations() {
       )}
 
       {/* MODAL DE VALORACIÓN */}
-      {reviewModal.open && (
+      {modalValoracion.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="glass-panel p-8 rounded-3xl max-w-md w-full border border-white/10 relative shadow-2xl">
             <button
               onClick={() =>
-                setReviewModal({ open: false, reservaId: null, djName: "" })
+                setModalValoracion({ open: false, reservaId: null, djName: "" })
               }
               className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
             >
@@ -309,12 +309,12 @@ export default function MyReservations() {
             <p className="text-gray-400 mb-6 text-sm">
               ¿Qué te pareció la actuación de{" "}
               <span className="text-primary font-bold">
-                {reviewModal.djName}
+                {modalValoracion.djName}
               </span>
               ?
             </p>
 
-            <form onSubmit={handleReviewSubmit} className="space-y-6">
+            <form onSubmit={manejarEnviarValoracion} className="space-y-6">
               <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -357,10 +357,10 @@ export default function MyReservations() {
 
               <button
                 type="submit"
-                disabled={submittingReview}
+                disabled={enviandoValoracion}
                 className="w-full btn-primary py-3 rounded-xl font-bold flex justify-center items-center gap-2 shadow-lg"
               >
-                {submittingReview ? (
+                {enviandoValoracion ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
                   "Enviar Valoración"

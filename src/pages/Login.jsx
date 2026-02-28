@@ -8,23 +8,23 @@ export default function Login() {
   //ESTADOS
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [cargando, setCargando] = useState(false);
+  const { iniciarSesion } = useAuth();
+  const navegar = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setCargando(true);
 
     try {
-      await login(email, password);
+      await iniciarSesion(email, password);
       toast.success("¡Bienvenido de nuevo! 🎧");
-      navigate("/"); // Redirige al Home si todo va bien
+      navegar("/"); // Redirige al Home si todo va bien
     } catch (err) {
       console.error(err);
       toast.error("Email o contraseña incorrectos");
     } finally {
-      setLoading(false);
+      setCargando(false);
     }
   };
 
@@ -96,15 +96,15 @@ export default function Login() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={cargando}
               className="btn-primary w-full flex items-center justify-center gap-2 mt-4"
             >
-              {loading ? (
+              {cargando ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 "Iniciar Sesión"
               )}
-              {!loading && <ArrowRight size={20} />}
+              {!cargando && <ArrowRight size={20} />}
             </button>
           </form>
 

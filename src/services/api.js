@@ -44,60 +44,60 @@ api.interceptors.response.use(
 // Basicamente guardamos todos los endpoints de nuestra API
 // ==========================================
 
-export const authAPI = {
-  login: (credentials) => api.post("/Usuarios/login", credentials),
-  registerClient: (data) => api.post("/Usuarios/registro/cliente", data),
-  registerDj: (data) => api.post("/Usuarios/registro/dj", data),
-  getMe: () => api.get("/Usuarios/me"), // Recuperar sesión con el token
-  getUserById: (id) => api.get(`/Usuarios/${id}`),
-  updateProfile: (data) => api.put("/Usuarios/perfil", data),
-  deactivateAccount: () => api.delete("/Usuarios/desactivar-cuenta"),
-  uploadPhoto: (formData) =>
-    api.put("/Usuarios/perfil/foto", formData, {
+export const apiAutenticacion = {
+  iniciarSesion: (credenciales) => api.post("/Usuarios/login", credenciales),
+  registrarCliente: (datos) => api.post("/Usuarios/registro/cliente", datos),
+  registrarDj: (datos) => api.post("/Usuarios/registro/dj", datos),
+  obtenerUsuarioActual: () => api.get("/Usuarios/me"), // Recuperar sesión con el token
+  obtenerUsuarioPorId: (id) => api.get(`/Usuarios/${id}`),
+  actualizarPerfil: (datos) => api.put("/Usuarios/perfil", datos),
+  desactivarCuenta: () => api.delete("/Usuarios/desactivar-cuenta"),
+  subirFoto: (datosFormulario) =>
+    api.put("/Usuarios/perfil/foto", datosFormulario, {
       headers: { "Content-Type": "multipart/form-data" }, // Para enviar archivos físicos
     }),
-  deletePhoto: () => api.delete("/Usuarios/perfil/foto"),
+  eliminarFoto: () => api.delete("/Usuarios/perfil/foto"),
 };
 
-export const djsAPI = {
-  getAll: () => api.get("/DJs"),
-  search: (params) => api.get("/DJs/buscar", { params }), // Buscador dinámico
-  getById: (id) => api.get(`/DJs/${id}`), // Trae la ficha pública completa
-  updateDjProfile: (data) => api.put("/DJs/perfil", data),
+export const apiDjs = {
+  obtenerTodos: () => api.get("/DJs"),
+  buscar: (parametros) => api.get("/DJs/buscar", { params: parametros }), // Buscador dinámico
+  obtenerPorId: (id) => api.get(`/DJs/${id}`), // Trae la ficha pública completa
+  actualizarPerfilDj: (datos) => api.put("/DJs/perfil", datos),
 };
 
-export const bookingsAPI = {
-  create: (data) => api.post("/Reservas", data),
-  getAllMyBookings: () => api.get("/Reservas"), // Bandeja de entrada de reservas
-  updateStatus: (id, estado) =>
+export const apiReservas = {
+  crear: (datos) => api.post("/Reservas", datos),
+  obtenerMisReservas: () => api.get("/Reservas"), // Bandeja de entrada de reservas
+  actualizarEstado: (id, estado) =>
     api.put(`/Reservas/${id}/estado`, JSON.stringify(estado), {
       headers: { "Content-Type": "application/json" },
     }),
-  update: (id, data) => api.put(`/Reservas/${id}`, data),
-  delete: (id) => api.delete(`/Reservas/${id}`),
+  actualizar: (id, datos) => api.put(`/Reservas/${id}`, datos),
+  eliminar: (id) => api.delete(`/Reservas/${id}`),
 };
 
-export const portfolioAPI = {
-  upload: (formData) =>
-    api.post("/Portfolio/upload", formData, {
+export const apiPortafolio = {
+  subir: (datosFormulario) =>
+    api.post("/Portfolio/upload", datosFormulario, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
-  getByDj: (djId) => api.get(`/Portfolio/${djId}`),
-  delete: (id) => api.delete(`/Portfolio/${id}`),
+  obtenerPorDj: (idDj) => api.get(`/Portfolio/${idDj}`),
+  eliminar: (id) => api.delete(`/Portfolio/${id}`),
 };
 
-export const chatAPI = {
-  getHistory: (reservaId) => api.get(`/Chat/${reservaId}`),
-  sendMessage: (data) => api.post("/Chat", data),
+export const apiChat = {
+  obtenerHistorial: (idReserva) => api.get(`/Chat/${idReserva}`),
+  enviarMensaje: (datos) => api.post("/Chat", datos),
 };
 
-export const statsAPI = {
-  getDashboard: () => api.get("/Stats/dashboard"), // Estadísticas del panel DJ
+export const apiEstadisticas = {
+  obtenerDashboard: () => api.get("/Stats/dashboard"), // Estadísticas del panel DJ
 };
 
-export const reviewsAPI = {
-  create: (data) => api.post("/Valoraciones", data),
-  getByDj: (djId) => api.get(`/Valoraciones/dj/${djId}`), // Lista de opiniones para el perfil del DJ
+export const apiValoraciones = {
+  crear: (datos) => api.post("/Valoraciones", datos),
+  obtenerPorDj: (idDj) => api.get(`/Valoraciones/dj/${idDj}`), // Lista de opiniones para el perfil del DJ
 };
 
 export default api;

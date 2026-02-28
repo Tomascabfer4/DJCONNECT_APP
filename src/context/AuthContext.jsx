@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authAPI } from "../services/api";
+import { apiAutenticacion } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -9,31 +9,31 @@ const AuthContext = createContext();
 // ==========================================
 export function AuthProvider({ children }) {
   // ESTADOS GLOBALES (State)
-  // user: Guarda la información del usuario logueado.
+  // usuario: Guarda la información del usuario logueado.
   // token: El acceso encriptado que nos dio el backend.
-  // loading: Para evitar que la web cargue hasta saber si estás logueado o no.
-  const [user, setUser] = useState(null);
+  // cargando: Para evitar que la web cargue hasta saber si estás logueado o no.
+  const [usuario, setUsuario] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(true);
+  const [cargando, setCargando] = useState(true);
 
   // ==========================================
-  // FUNCIÓN: Logout
+  // FUNCIÓN: cerrarSesion
   // FLUJO: Borra el token para cerrar sesión.
   // ==========================================
-  const logout = () => {
+  const cerrarSesion = () => {
     localStorage.removeItem("token");
     setToken(null);
-    setUser(null);
+    setUsuario(null);
   };
 
   // Simplemente mapea los datos para que React los use correctamente.
-  const mapUser = (apiUser) => ({
-    id: apiUser.id,
-    name: apiUser.nombre,
-    email: apiUser.email,
-    user_type: apiUser.rol?.toLowerCase() || "client",
-    profile_image: apiUser.foto,
-    ...apiUser,
+  const mapearUsuario = (usuarioApi) => ({
+    id: usuarioApi.id,
+    nombre: usuarioApi.nombre,
+    email: usuarioApi.email,
+    tipoUsuario: usuarioApi.rol?.toLowerCase() || "client",
+    imagenPerfil: usuarioApi.foto,
+    ...usuarioApi,
   });
 
   // ==========================================
@@ -41,59 +41,62 @@ export function AuthProvider({ children }) {
   // useEffect en este caso se carga al cargar el componente.
   // ==========================================
   useEffect(() => {
-    const loadUser = async () => {
-      const savedToken = localStorage.getItem("token");
-      if (savedToken) {
+    const cargarUsuario = async () => {
+      const tokenGuardado = localStorage.getItem("token");
+      if (tokenGuardado) {
         try {
           // Llama al endpoint GET /Usuarios/me
-          const { data } = await authAPI.getMe();
-          setUser(mapUser(data)); // Guarda los datos en el estado global
+          const { data } = await apiAutenticacion.obtenerUsuarioActual();
+          setUsuario(mapearUsuario(data)); // Guarda los datos en el estado global
         } catch (error) {
           console.error(
             "Error de sesión: El token caducó o no es válido",
             error,
           );
-          logout(); // Si falla (ej: expiró a las 2h), lo echamos
+          cerrarSesion(); // Si falla (ej: expiró a las 2h), lo echamos
         }
       }
-      setLoading(false); // Si loading es false, ya hemos cargado la sesión.
+      setCargando(false); // Si cargando es false, ya hemos cargado la sesión.
     };
-    loadUser();
+    cargarUsuario();
   }, []);
 
   // ==========================================
-  // Para logearse utilizamos la endpoint de getme y guardamos el token
+  // Para logearse utilizamos la endpoint de obtenerUsuarioActual y guardamos el token
   // ==========================================
-  const login = async (email, password) => {
-    const { data } = await authAPI.login({ email, password });
+  const iniciarSesion = async (email, password) => {
+    const { data } = await apiAutenticacion.iniciarSesion({ email, password });
     localStorage.setItem("token", data.token);
     setToken(data.token);
 
     // Una vez logueado, traemos los datos visuales
-    const meResponse = await authAPI.getMe();
-    setUser(mapUser(meResponse.data));
+    const respuestaUsuario = await apiAutenticacion.obtenerUsuarioActual();
+    setUsuario(mapearUsuario(respuestaUsuario.data));
   };
 
   // ==========================================
-  // Para registrar un usuario utilizamos la endpoint de registerDj o registerClient
+  // Para registrar un usuario utilizamos la endpoint de registrarDj o registrarCliente
   // Despues llamamos a la funcion anterior para que haga logueo automatico
   // ==========================================
-  const register = async (formData, type) => {
-    const apiCall = type === "dj" ? authAPI.registerDj : authAPI.registerClient;
-    await apiCall(formData);
-    await login(formData.email, formData.password);
+  const registrarUsuario = async (datosFormulario, tipo) => {
+    const llamadaApi =
+      tipo === "dj"
+        ? apiAutenticacion.registrarDj
+        : apiAutenticacion.registrarCliente;
+    await llamadaApi(datosFormulario);
+    await iniciarSesion(datosFormulario.email, datosFormulario.password);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        usuario,
         token,
-        loading,
-        login,
-        register,
-        logout,
-        isDJ: user?.user_type === "dj", // Variable para saber si el usuario es DJ o Cliente
+        cargando,
+        iniciarSesion,
+        registrarUsuario,
+        cerrarSesion,
+        esDJ: usuario?.tipoUsuario === "dj", // Variable para saber si el usuario es DJ o Cliente
       }}
     >
       {children}
@@ -108,9 +111,9 @@ export function AuthProvider({ children }) {
 // Lo de abajo es para que no se muestre un error
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
+  const contexto = useContext(AuthContext);
+  if (contexto === undefined) {
     throw new Error("useAuth debe usarse dentro de un AuthProvider");
   }
-  return context;
+  return contexto;
 };

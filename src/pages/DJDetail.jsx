@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { djsAPI, bookingsAPI, reviewsAPI, portfolioAPI } from "../services/api";
+import { apiDjs, apiReservas, apiValoraciones, apiPortafolio } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import {
@@ -23,14 +23,14 @@ import {
 
 export default function DJDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const navegar = useNavigate();
+  const { usuario } = useAuth();
 
   const [dj, setDj] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [portfolio, setPortfolio] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [portafolio, setPortafolio] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [enviando, setEnviando] = useState(false);
 
   // Formulario adaptado 100% al Swagger
   const [fecha, setFecha] = useState("");
@@ -43,30 +43,30 @@ export default function DJDetail() {
     const fetchData = async () => {
       try {
         const [djRes, reviewsRes, portfolioRes] = await Promise.all([
-          djsAPI.getById(id),
-          reviewsAPI.getByDj(id),
-          portfolioAPI.getByDj(id),
+          apiDjs.obtenerPorId(id),
+          apiValoraciones.obtenerPorDj(id),
+          apiPortafolio.obtenerPorDj(id),
         ]);
 
         setDj(djRes.data);
         setReviews(reviewsRes.data);
-        setPortfolio(portfolioRes.data);
+        setPortafolio(portfolioRes.data);
       } catch (error) {
         console.error("Error cargando datos:", error);
         toast.error("Error al cargar el perfil");
-        navigate("/dashboard");
+        navegar("/dashboard");
       } finally {
-        setLoading(false);
+        setCargando(false);
       }
     };
     fetchData();
-  }, [id, navigate]);
+  }, [id, navegar]);
 
-  const handleBooking = async (e) => {
+  const manejarReserva = async (e) => {
     e.preventDefault();
-    if (!user) return navigate("/login");
+    if (!usuario) return navegar("/login");
 
-    setSubmitting(true);
+    setEnviando(true);
     try {
       // 1. Enviamos la fecha y hora "local" (sin la Z al final)
       // Esto evita que JavaScript reste una hora al convertir a UTC
@@ -74,7 +74,7 @@ export default function DJDetail() {
 
       // 2. Enviamos el horario solo como el número de horas (ej: "2", "3")
       // Esto permite que el backend haga el cálculo de: Precio * Horas
-      await bookingsAPI.create({
+      await apiReservas.create({
         djId: parseInt(id),
         fechaEvento: fechaHoraLocal,
         horario: horas.toString(), // Enviamos solo el número
@@ -83,7 +83,7 @@ export default function DJDetail() {
       });
 
       toast.success("¡Solicitud enviada!");
-      setTimeout(() => navigate("/reservas"), 2000);
+      setTimeout(() => navegar("/reservas"), 2000);
     } catch (error) {
       console.log("🛑 DETALLES DEL ERROR:", error.response?.data);
       const errorMsg =
@@ -93,11 +93,11 @@ export default function DJDetail() {
 
       toast.error(errorMsg);
     } finally {
-      setSubmitting(false);
+      setEnviando(false);
     }
   };
 
-  if (loading)
+  if (cargando)
     return (
       <div className="h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -110,16 +110,16 @@ export default function DJDetail() {
     ? dj.generosMusicales.split(",")
     : ["Varios"];
 
-  // Separamos el portfolio por tipos para pintarlos ordenados
-  const fotosYVideos = portfolio.filter(
+  // Separamos el portafolio por tipos para pintarlos ordenados
+  const fotosYVideos = portafolio.filter(
     (p) => p.tipo === "imagen" || p.tipo === "video",
   );
-  const musica = portfolio.filter((p) => p.tipo === "musica");
+  const musica = portafolio.filter((p) => p.tipo === "musica");
 
   return (
     <div className="max-w-7xl mx-auto pb-20 pt-6 px-4 animate-fade-in">
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => navegar(-1)}
         className="text-gray-400 hover:text-white flex items-center gap-2 mb-6 transition-colors"
       >
         <ArrowLeft size={20} /> Volver
@@ -190,7 +190,7 @@ export default function DJDetail() {
           </div>
 
           {/* 2. PORTFOLIO MULTIMEDIA */}
-          {portfolio.length > 0 && (
+          {portafolio.length > 0 && (
             <div className="glass-panel p-8 rounded-3xl">
               <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                 <PlayCircle className="text-blue-400" /> Galería & Sesiones
@@ -350,7 +350,7 @@ export default function DJDetail() {
               </div>
             </div>
 
-            <form onSubmit={handleBooking} className="space-y-4">
+            <form onSubmit={manejarReserva} className="space-y-4">
               {/* TIPO DE EVENTO */}
               <div className="space-y-1">
                 <label className="text-gray-300 text-sm">Tipo de Evento</label>
@@ -451,10 +451,10 @@ export default function DJDetail() {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={enviando}
                 className="btn-primary w-full py-3 rounded-xl font-bold mt-4"
               >
-                {submitting ? (
+                {enviando ? (
                   <Loader2 className="animate-spin mx-auto" />
                 ) : (
                   "Reservar Ahora"

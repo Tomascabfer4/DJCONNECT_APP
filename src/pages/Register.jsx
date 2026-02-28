@@ -23,11 +23,11 @@ export default function Register() {
   // userType: Puede ser "client" o "dj".
   // Controla colores, imágenes y a qué endpoint de la API llamaremos.
   const [userType, setUserType] = useState("client");
-  const [loading, setLoading] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   // CONEXIÓN CONTEXTO: Extraemos la función register del AuthContext.
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const { registrarUsuario } = useAuth();
+  const navegar = useNavigate();
 
   // ==========================================
   // FUNCIÓN: handleSubmit
@@ -36,10 +36,10 @@ export default function Register() {
   // ==========================================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setCargando(true);
 
     try {
-      await register(
+      await registrarUsuario(
         {
           nombre: name,
           email,
@@ -54,13 +54,13 @@ export default function Register() {
       );
 
       // Tras el registro exitoso, el AuthContext ya nos habrá logueado automáticamente.
-      navigate("/");
+      navegar("/");
     } catch (err) {
       console.error(err);
       // Mostramos el mensaje de error que viene directamente de C# (ej: "El email ya existe").
       toast.error(err.response?.data || "Error al registrarse.");
     } finally {
-      setLoading(false);
+      setCargando(false);
     }
   };
 
@@ -195,7 +195,7 @@ export default function Register() {
                 FLUJO: Cambia su gradiente (Primary vs Secondary) según el rol. */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={cargando}
               className={`w-full flex items-center justify-center gap-2 mt-6 py-3 px-6 rounded-xl text-white font-bold transition-transform hover:scale-[1.02] shadow-lg
                 ${
                   userType === "dj"
@@ -203,8 +203,8 @@ export default function Register() {
                     : "bg-linear-to-r from-secondary to-cyan-600 shadow-secondary/25"
                 }`}
             >
-              {loading ? <Loader2 className="animate-spin" /> : "Crear Cuenta"}
-              {!loading && <ArrowRight size={20} />}
+              {cargando ? <Loader2 className="animate-spin" /> : "Crear Cuenta"}
+              {!cargando && <ArrowRight size={20} />}
             </button>
           </form>
 

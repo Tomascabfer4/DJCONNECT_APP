@@ -8,7 +8,7 @@ import HeroBackground from "../components/AnimacionPortada/HeroBackground";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Landing() {
-  const navigate = useNavigate();
+  const navegar = useNavigate();
   const comp = useRef(null);
   const bgRef = useRef(null);
   const contentRef = useRef(null);
@@ -116,13 +116,13 @@ export default function Landing() {
           </div>
           <div className="flex gap-4">
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navegar("/login")}
               className="text-sm font-medium text-gray-300 hover:text-white transition-colors"
             >
               Entrar
             </button>
             <button
-              onClick={() => navigate("/registro")}
+              onClick={() => navegar("/registro")}
               className="px-4 py-2 bg-primary hover:bg-primary/80 rounded-full text-sm font-bold transition-all text-white shadow-lg shadow-primary/20"
             >
               Registrarse
@@ -294,7 +294,7 @@ export default function Landing() {
                 la escena nocturna.
               </p>
               <button
-                onClick={() => navigate("/registro")}
+                onClick={() => navegar("/registro")}
                 className="btn-primary text-xl px-12 py-5 shadow-2xl shadow-primary/40 hover:shadow-primary/60"
               >
                 Crear Cuenta Gratis

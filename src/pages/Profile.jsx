@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { authAPI, djsAPI, portfolioAPI } from "../services/api";
+import { apiAutenticacion, apiDjs, apiPortafolio } from "../services/api";
 import { toast } from "react-toastify";
 import {
   User,
@@ -17,13 +17,13 @@ import {
 } from "lucide-react";
 
 export default function Profile() {
-  const { isDJ } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("cuenta"); // "cuenta" | "artista"
+  const { esDJ } = useAuth();
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [pestanaActiva, setPestanaActiva] = useState("cuenta"); // "cuenta" | "artista"
 
   // ESTADOS - DATOS BÁSICOS (Usuario)
-  const [formData, setFormData] = useState({
+  const [datosFormulario, setDatosFormulario] = useState({
     nombre: "",
     telefono: "",
     ubicacion: "",
@@ -31,7 +31,7 @@ export default function Profile() {
   const [fotoPreview, setFotoPreview] = useState(null);
 
   // ESTADOS - DATOS DJ (Solo si es DJ)
-  const [djData, setDjData] = useState({
+  const [datosDj, setDatosDj] = useState({
     nombreArtistico: "",
     bio: "",
     generos: "",
@@ -40,26 +40,26 @@ export default function Profile() {
   });
 
   // ESTADOS - PORTFOLIO (Solo si es DJ)
-  const [portfolio, setPortfolio] = useState([]);
-  const [uploading, setUploading] = useState(false);
+  const [portafolio, setPortafolio] = useState([]);
+  const [subiendo, setSubiendo] = useState(false);
 
   // 1. CARGAR DATOS AL ENTRAR
   useEffect(() => {
-    const loadProfile = async () => {
+    const cargarPerfil = async () => {
       try {
         // A) Cargar datos básicos de Usuario
-        const { data: userData } = await authAPI.getMe();
-        setFormData({
+        const { data: userData } = await apiAutenticacion.obtenerUsuarioActual();
+        setDatosFormulario({
           nombre: userData.nombre || "",
           telefono: userData.telefono || "",
           ubicacion: userData.ubicacion || "",
         });
         setFotoPreview(userData.foto);
 
-        // B) Si es DJ, cargar datos extendidos y portfolio
-        if (isDJ) {
-          const { data: djProfile } = await djsAPI.getById(userData.id);
-          setDjData({
+        // B) Si es DJ, cargar datos extendidos y portafolio
+        if (esDJ) {
+          const { data: djProfile } = await apiDjs.obtenerPorId(userData.id);
+          setDatosDj({
             nombreArtistico: djProfile.nombreArtistico || "",
             bio: djProfile.bio || "",
             generos: djProfile.generosMusicales || "",
@@ -67,54 +67,54 @@ export default function Profile() {
             aniosExperiencia: djProfile.aniosExperiencia || 0,
           });
 
-          const { data: portfolioData } = await portfolioAPI.getByDj(
+          const { data: portfolioData } = await apiPortafolio.obtenerPorDj(
             userData.id,
           );
-          setPortfolio(portfolioData);
+          setPortafolio(portfolioData);
         }
       } catch (error) {
         // CORRECCIÓN 2: Usamos 'error' para loguearlo en consola
         console.error("Error al cargar perfil:", error);
         toast.error("Error al cargar tu perfil");
       } finally {
-        setLoading(false);
+        setCargando(false);
       }
     };
-    loadProfile();
-  }, [isDJ]);
+    cargarPerfil();
+  }, [esDJ]);
 
   // 2. GUARDAR DATOS BÁSICOS
-  const handleUpdateBasic = async (e) => {
+  const manejarActualizacionBasica = async (e) => {
     e.preventDefault();
-    setSaving(true);
+    setGuardando(true);
     try {
-      await authAPI.updateProfile(formData);
+      await apiAutenticacion.actualizarPerfil(datosFormulario);
       toast.success("Datos personales actualizados");
     } catch (error) {
       console.error(error); // Usamos error
       toast.error("Error al guardar datos personales");
     } finally {
-      setSaving(false);
+      setGuardando(false);
     }
   };
 
   // 3. GUARDAR DATOS DJ
-  const handleUpdateDJ = async (e) => {
+  const manejarActualizacionDj = async (e) => {
     e.preventDefault();
-    setSaving(true);
+    setGuardando(true);
     try {
-      await djsAPI.updateDjProfile(djData);
+      await apiDjs.actualizarPerfilDj(datosDj);
       toast.success("Perfil de artista actualizado");
     } catch (error) {
       console.error(error); // Usamos error
       toast.error("Error al guardar perfil de DJ");
     } finally {
-      setSaving(false);
+      setGuardando(false);
     }
   };
 
   // 4. SUBIR FOTO DE PERFIL
-  const handleAvatarChange = async (e) => {
+  const manejarCambioAvatar = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -123,7 +123,7 @@ export default function Profile() {
 
     try {
       toast.info("Subiendo foto...");
-      const { data } = await authAPI.uploadPhoto(form);
+      const { data } = await apiAutenticacion.subirFoto(form);
       setFotoPreview(data.url);
       toast.success("Foto de perfil actualizada");
     } catch (error) {
@@ -133,7 +133,7 @@ export default function Profile() {
   };
 
   // 5. SUBIR ITEM AL PORTFOLIO
-  const handleUploadPortfolio = async (e, tipo) => {
+  const manejarSubidaPortafolio = async (e, tipo) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -142,25 +142,25 @@ export default function Profile() {
     form.append("Tipo", tipo);
     form.append("Titulo", file.name.split(".")[0]);
 
-    setUploading(true);
+    setSubiendo(true);
     try {
-      const { data } = await portfolioAPI.upload(form);
-      setPortfolio([data, ...portfolio]);
-      toast.success("Archivo añadido al portfolio");
+      const { data } = await apiPortafolio.subir(form);
+      setPortafolio([data, ...portafolio]);
+      toast.success("Archivo añadido al portafolio");
     } catch (error) {
       console.error("Error subida:", error); // Usamos error
       toast.error("Error al subir archivo");
     } finally {
-      setUploading(false);
+      setSubiendo(false);
     }
   };
 
   // 6. BORRAR ITEM PORTFOLIO
-  const handleDeletePortfolio = async (id) => {
+  const manejarEliminarPortafolio = async (id) => {
     if (!confirm("¿Seguro que quieres borrar este archivo?")) return;
     try {
-      await portfolioAPI.delete(id);
-      setPortfolio(portfolio.filter((p) => p.id !== id));
+      await apiPortafolio.eliminar(id);
+      setPortafolio(portafolio.filter((p) => p.id !== id));
       toast.success("Archivo eliminado");
     } catch (error) {
       console.error(error); // Usamos error
@@ -168,7 +168,7 @@ export default function Profile() {
     }
   };
 
-  if (loading)
+  if (cargando)
     return (
       <div className="h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -182,17 +182,17 @@ export default function Profile() {
       </h1>
 
       {/* TABS (Solo si es DJ) */}
-      {isDJ && (
+      {esDJ && (
         <div className="flex gap-4 mb-8 border-b border-white/10">
           <button
-            onClick={() => setActiveTab("cuenta")}
-            className={`pb-3 px-4 text-sm font-bold transition-colors border-b-2 ${activeTab === "cuenta" ? "border-primary text-white" : "border-transparent text-gray-400 hover:text-white"}`}
+            onClick={() => setPestanaActiva("cuenta")}
+            className={`pb-3 px-4 text-sm font-bold transition-colors border-b-2 ${pestanaActiva === "cuenta" ? "border-primary text-white" : "border-transparent text-gray-400 hover:text-white"}`}
           >
             Cuenta y Seguridad
           </button>
           <button
-            onClick={() => setActiveTab("artista")}
-            className={`pb-3 px-4 text-sm font-bold transition-colors border-b-2 ${activeTab === "artista" ? "border-primary text-white" : "border-transparent text-gray-400 hover:text-white"}`}
+            onClick={() => setPestanaActiva("artista")}
+            className={`pb-3 px-4 text-sm font-bold transition-colors border-b-2 ${pestanaActiva === "artista" ? "border-primary text-white" : "border-transparent text-gray-400 hover:text-white"}`}
           >
             Perfil de Artista (Público)
           </button>
@@ -200,7 +200,7 @@ export default function Profile() {
       )}
 
       {/* === TAB 1: DATOS CUENTA === */}
-      {activeTab === "cuenta" && (
+      {pestanaActiva === "cuenta" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* FOTO DE PERFIL */}
           <div className="md:col-span-1">
@@ -217,7 +217,7 @@ export default function Profile() {
                     type="file"
                     className="hidden"
                     accept="image/*"
-                    onChange={handleAvatarChange}
+                    onChange={manejarCambioAvatar}
                   />
                 </label>
               </div>
@@ -230,7 +230,7 @@ export default function Profile() {
           {/* FORMULARIO DATOS */}
           <div className="md:col-span-2">
             <form
-              onSubmit={handleUpdateBasic}
+              onSubmit={manejarActualizacionBasica}
               className="glass-panel p-8 rounded-3xl space-y-6"
             >
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -245,9 +245,9 @@ export default function Profile() {
                   <input
                     type="text"
                     className="glass-input w-full bg-black/40 text-white"
-                    value={formData.nombre}
+                    value={datosFormulario.nombre}
                     onChange={(e) =>
-                      setFormData({ ...formData, nombre: e.target.value })
+                      setDatosFormulario({ ...datosFormulario, nombre: e.target.value })
                     }
                   />
                 </div>
@@ -258,9 +258,9 @@ export default function Profile() {
                   <input
                     type="tel"
                     className="glass-input w-full bg-black/40 text-white"
-                    value={formData.telefono}
+                    value={datosFormulario.telefono}
                     onChange={(e) =>
-                      setFormData({ ...formData, telefono: e.target.value })
+                      setDatosFormulario({ ...datosFormulario, telefono: e.target.value })
                     }
                   />
                 </div>
@@ -271,9 +271,9 @@ export default function Profile() {
                   <input
                     type="text"
                     className="glass-input w-full bg-black/40 text-white"
-                    value={formData.ubicacion}
+                    value={datosFormulario.ubicacion}
                     onChange={(e) =>
-                      setFormData({ ...formData, ubicacion: e.target.value })
+                      setDatosFormulario({ ...datosFormulario, ubicacion: e.target.value })
                     }
                   />
                 </div>
@@ -281,10 +281,10 @@ export default function Profile() {
 
               <button
                 type="submit"
-                disabled={saving}
+                disabled={guardando}
                 className="btn-primary px-6 py-2 rounded-xl font-bold flex items-center gap-2"
               >
-                {saving ? (
+                {guardando ? (
                   <Loader2 className="animate-spin" size={18} />
                 ) : (
                   <Save size={18} />
@@ -297,11 +297,11 @@ export default function Profile() {
       )}
 
       {/* === TAB 2: PERFIL ARTISTA (Solo DJ) === */}
-      {isDJ && activeTab === "artista" && (
+      {esDJ && pestanaActiva === "artista" && (
         <div className="space-y-8">
           {/* FORMULARIO DJ */}
           <form
-            onSubmit={handleUpdateDJ}
+            onSubmit={manejarActualizacionDj}
             className="glass-panel p-8 rounded-3xl space-y-6"
           >
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -317,9 +317,9 @@ export default function Profile() {
                 <input
                   type="text"
                   className="glass-input w-full bg-black/40 text-white font-bold text-lg"
-                  value={djData.nombreArtistico}
+                  value={datosDj.nombreArtistico}
                   onChange={(e) =>
-                    setDjData({ ...djData, nombreArtistico: e.target.value })
+                    setDatosDj({ ...datosDj, nombreArtistico: e.target.value })
                   }
                 />
               </div>
@@ -332,9 +332,9 @@ export default function Profile() {
                   rows="4"
                   className="glass-input w-full bg-black/40 text-white"
                   placeholder="Cuéntanos tu historia, estilo y experiencia..."
-                  value={djData.bio}
+                  value={datosDj.bio}
                   onChange={(e) =>
-                    setDjData({ ...djData, bio: e.target.value })
+                    setDatosDj({ ...datosDj, bio: e.target.value })
                   }
                 />
               </div>
@@ -347,9 +347,9 @@ export default function Profile() {
                   type="text"
                   className="glass-input w-full bg-black/40 text-white"
                   placeholder="Techno, House, Pop..."
-                  value={djData.generos}
+                  value={datosDj.generos}
                   onChange={(e) =>
-                    setDjData({ ...djData, generos: e.target.value })
+                    setDatosDj({ ...datosDj, generos: e.target.value })
                   }
                 />
               </div>
@@ -367,9 +367,9 @@ export default function Profile() {
                     <input
                       type="number"
                       className="glass-input w-full pl-10 bg-black/40 text-white"
-                      value={djData.precioPorHora}
+                      value={datosDj.precioPorHora}
                       onChange={(e) =>
-                        setDjData({ ...djData, precioPorHora: e.target.value })
+                        setDatosDj({ ...datosDj, precioPorHora: e.target.value })
                       }
                     />
                   </div>
@@ -381,9 +381,9 @@ export default function Profile() {
                   <input
                     type="number"
                     className="glass-input w-full bg-black/40 text-white"
-                    value={djData.aniosExperiencia}
+                    value={datosDj.aniosExperiencia}
                     onChange={(e) =>
-                      setDjData({ ...djData, aniosExperiencia: e.target.value })
+                      setDatosDj({ ...datosDj, aniosExperiencia: e.target.value })
                     }
                   />
                 </div>
@@ -392,10 +392,10 @@ export default function Profile() {
 
             <button
               type="submit"
-              disabled={saving}
+              disabled={guardando}
               className="btn-primary px-6 py-2 rounded-xl font-bold flex items-center gap-2"
             >
-              {saving ? (
+              {guardando ? (
                 <Loader2 className="animate-spin" size={18} />
               ) : (
                 <Save size={18} />
@@ -411,7 +411,7 @@ export default function Profile() {
                 <UploadCloud size={20} className="text-blue-400" /> Portfolio
                 Multimedia
               </h3>
-              {uploading && (
+              {subiendo && (
                 <span className="text-sm text-blue-400 animate-pulse">
                   Subiendo archivo...
                 </span>
@@ -426,8 +426,8 @@ export default function Profile() {
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  onChange={(e) => handleUploadPortfolio(e, "imagen")}
-                  disabled={uploading}
+                  onChange={(e) => manejarSubidaPortafolio(e, "imagen")}
+                  disabled={subiendo}
                 />
               </label>
               <label className="cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl flex items-center gap-2 text-gray-300 transition-colors">
@@ -436,8 +436,8 @@ export default function Profile() {
                   type="file"
                   className="hidden"
                   accept="video/*"
-                  onChange={(e) => handleUploadPortfolio(e, "video")}
-                  disabled={uploading}
+                  onChange={(e) => manejarSubidaPortafolio(e, "video")}
+                  disabled={subiendo}
                 />
               </label>
               <label className="cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl flex items-center gap-2 text-gray-300 transition-colors">
@@ -446,20 +446,20 @@ export default function Profile() {
                   type="file"
                   className="hidden"
                   accept="audio/*"
-                  onChange={(e) => handleUploadPortfolio(e, "musica")}
-                  disabled={uploading}
+                  onChange={(e) => manejarSubidaPortafolio(e, "musica")}
+                  disabled={subiendo}
                 />
               </label>
             </div>
 
             {/* Grid de archivos subidos */}
-            {portfolio.length === 0 ? (
+            {portafolio.length === 0 ? (
               <p className="text-gray-500 italic text-sm">
-                Aún no has subido contenido a tu portfolio.
+                Aún no has subido contenido a tu portafolio.
               </p>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {portfolio.map((item) => (
+                {portafolio.map((item) => (
                   <div
                     key={item.id}
                     className="relative group aspect-square bg-black/50 rounded-xl overflow-hidden border border-white/10"
@@ -490,7 +490,7 @@ export default function Profile() {
                     {/* Overlay de borrado */}
                     <div className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button
-                        onClick={() => handleDeletePortfolio(item.id)}
+                        onClick={() => manejarEliminarPortafolio(item.id)}
                         className="text-white flex flex-col items-center gap-1"
                       >
                         <Trash2 size={24} />

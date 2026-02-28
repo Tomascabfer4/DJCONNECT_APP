@@ -13,24 +13,24 @@ import {
 import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar() {
-  // CONTEXTO: Extraemos 'isDJ' para saber qué etiquetas mostrar y 'logout' para cerrar sesión.
-  const { user, logout, isDJ } = useAuth();
-  const navigate = useNavigate();
+  // CONTEXTO: Extraemos 'esDJ' para saber qué etiquetas mostrar y 'cerrarSesion' para cerrar sesión.
+  const { usuario, cerrarSesion, esDJ } = useAuth();
+  const navegar = useNavigate();
 
   // ESTADO: Controla si el menú lateral está abierto en dispositivos móviles.
-  const [isOpen, setIsOpen] = useState(false);
+  const [estaAbierto, setEstaAbierto] = useState(false);
 
   // Para cerrar sesión.
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const manejarCerrarSesion = () => {
+    cerrarSesion();
+    navegar("/login");
   };
 
   // Rutas del menu, si eres DJ ves "Mi Panel", si eres Cliente ves "Explorar DJs"
-  const navItems = [
+  const itemsNavegacion = [
     {
       icon: LayoutGrid,
-      label: isDJ ? "Mi Panel" : "Explorar DJs",
+      label: esDJ ? "Mi Panel" : "Explorar DJs",
       path: "/dashboard",
     },
     { icon: MessageCircle, label: "Chats", path: "/chats" },
@@ -57,7 +57,7 @@ export default function Sidebar() {
           </div>
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
+            onClick={() => setEstaAbierto(true)}
             className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/10 transition-colors"
           >
             <Menu size={24} />
@@ -65,10 +65,10 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {isOpen && (
+      {estaAbierto && (
         <div
           className="md:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-998"
-          onClick={() => setIsOpen(false)} // Si se toca fuera del menu se cierra
+          onClick={() => setEstaAbierto(false)} // Si se toca fuera del menu se cierra
         />
       )}
 
@@ -77,7 +77,7 @@ export default function Sidebar() {
       <aside
         className={`
           w-[280px] h-dvh fixed left-0 top-0 p-4 flex flex-col z-1000 transition-transform duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          ${estaAbierto ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
         `}
       >
@@ -93,7 +93,7 @@ export default function Sidebar() {
             {/* Ponemos un boton de cerrar solo para moviles */}
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={() => setEstaAbierto(false)}
               className="md:hidden text-gray-400 hover:text-white transition-colors bg-white/5 p-2 rounded-xl border border-white/10 shrink-0"
             >
               <X size={20} />
@@ -103,11 +103,11 @@ export default function Sidebar() {
           {/* 🔗 MENÚ DE NAVEGACIÓN
               Mapeamos los ítems y usamos NavLink para detectar automáticamente en qué página estamos (isActive). */}
           <nav className="flex-1 space-y-2">
-            {navItems.map((item) => (
+            {itemsNavegacion.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
-                onClick={() => setIsOpen(false)} // 🔄 FLUJO: Al hacer clic en un enlace, el menú móvil se cierra solo.
+                onClick={() => setEstaAbierto(false)} // 🔄 FLUJO: Al hacer clic en un enlace, el menú móvil se cierra solo.
                 className={({ isActive }) => `
                   flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group
                   ${
@@ -129,24 +129,24 @@ export default function Sidebar() {
             <div className="flex items-center gap-3 mb-4">
               <img
                 src={
-                  user?.profile_image ||
-                  `https://ui-avatars.com/api/?name=${user?.name}&background=random`
+                  usuario?.imagenPerfil ||
+                  `https://ui-avatars.com/api/?name=${usuario?.nombre}&background=random`
                 }
                 alt="User"
                 className="w-10 h-10 rounded-full border border-white/20 object-cover shrink-0"
               />
               <div className="overflow-hidden">
                 <h4 className="text-sm font-bold text-white truncate">
-                  {user?.name}
+                  {usuario?.nombre}
                 </h4>
                 <p className="text-xs text-gray-400 capitalize">
-                  {isDJ ? "DJ" : "Cliente"}
+                  {esDJ ? "DJ" : "Cliente"}
                 </p>
               </div>
             </div>
 
             <button
-              onClick={handleLogout}
+              onClick={manejarCerrarSesion}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors text-sm font-bold border border-red-500/10"
             >
               <LogOut size={18} /> Cerrar Sesión

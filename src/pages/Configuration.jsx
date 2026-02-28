@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Settings, Wrench, ArrowLeft } from "lucide-react";
 
 export default function Configuration() {
-  const navigate = useNavigate();
+  const navegar = useNavigate();
 
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-100px)] flex items-center justify-center p-4 animate-fade-in relative z-10">
@@ -35,7 +35,7 @@ export default function Configuration() {
 
         {/* Botón de regreso */}
         <button
-          onClick={() => navigate(-1)} // Vuelve a la página anterior
+          onClick={() => navegar(-1)} // Vuelve a la página anterior
           className="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 px-6 py-3 rounded-xl transition-all hover:-translate-x-1 font-bold shadow-md"
         >
           <ArrowLeft size={18} />

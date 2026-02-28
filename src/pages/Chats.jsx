@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { bookingsAPI } from "../services/api";
+import { apiReservas } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -7,26 +7,26 @@ import { Loader2, MessageSquare, Calendar, ArrowRight } from "lucide-react";
 
 export default function Chats() {
   const [conversaciones, setConversaciones] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { isDJ } = useAuth();
-  const navigate = useNavigate();
+  const [cargando, setCargando] = useState(true);
+  const { esDJ } = useAuth();
+  const navegar = useNavigate();
 
   useEffect(() => {
     const fetchConversaciones = async () => {
       try {
-        const { data } = await bookingsAPI.getAllMyBookings();
+        const { data } = await apiReservas.obtenerMisReservas();
         setConversaciones(data);
       } catch (error) {
         console.error("Error cargando chats:", error);
         toast.error("No se pudieron cargar tus conversaciones.");
       } finally {
-        setLoading(false);
+        setCargando(false);
       }
     };
     fetchConversaciones();
   }, []);
 
-  if (loading)
+  if (cargando)
     return (
       <div className="h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -60,10 +60,10 @@ export default function Chats() {
         <div className="space-y-4">
           {conversaciones.map((chat) => {
             // Lógica para saber qué nombre y qué foto mostrar dependiendo de si soy DJ o Cliente
-            const nombreChat = isDJ ? chat.nombreCliente : chat.nombreDj;
+            const nombreChat = esDJ ? chat.nombreCliente : chat.nombreDj;
 
             // Usamos la foto del backend, o un avatar generado con iniciales si no hay foto
-            const fotoChat = isDJ
+            const fotoChat = esDJ
               ? chat.fotoCliente ||
                 `https://ui-avatars.com/api/?name=${chat.nombreCliente}&background=1A1A1A&color=fff&bold=true`
               : chat.fotoDj ||
@@ -74,7 +74,7 @@ export default function Chats() {
                 key={chat.id}
                 // Le pasamos el nombre y la foto "escondidos" en el navigates
                 onClick={() =>
-                  navigate(`/chat/${chat.id}`, {
+                  navegar(`/chat/${chat.id}`, {
                     state: {
                       nombre: nombreChat,
                       foto: fotoChat,

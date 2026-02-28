@@ -22,9 +22,9 @@ import Configuration from "./pages/Configuration";
 // Espera hasta que se haga el logueo, si no loguea manda al login
 // ==========================================
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" />;
+  const { usuario, cargando } = useAuth();
+  if (cargando) return null;
+  if (!usuario) return <Navigate to="/login" />;
   return children;
 };
 
@@ -32,8 +32,8 @@ const ProtectedRoute = ({ children }) => {
 // Si ya estas logueado, te manda al dashboard
 // ==========================================
 const PublicRoute = ({ children }) => {
-  const { user } = useAuth();
-  if (user) return <Navigate to="/dashboard" />;
+  const { usuario } = useAuth();
+  if (usuario) return <Navigate to="/dashboard" />;
   return children;
 };
 

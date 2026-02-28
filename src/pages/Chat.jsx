@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom"; // ✅ Añadido useLocation
-import { chatAPI } from "../services/api";
+import { apiChat } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { toast } from "react-toastify";
@@ -8,8 +8,8 @@ import { Send, ArrowLeft, Loader2, MessageSquare } from "lucide-react";
 
 export default function Chat() {
   const { reservaId } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const navegar = useNavigate();
+  const { usuario } = useAuth();
 
   // Obtenemos los datos (nombre y foto) que le pasamos desde Chats.jsx
   const location = useLocation();
@@ -23,7 +23,7 @@ export default function Chat() {
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [cargando, setCargando] = useState(true);
   const [connection, setConnection] = useState(null);
 
   const messagesEndRef = useRef(null);
@@ -33,13 +33,13 @@ export default function Chat() {
 
     const setupChat = async () => {
       try {
-        const { data } = await chatAPI.getHistory(reservaId);
+        const { data } = await apiChat.obtenerHistorial(reservaId);
         setMessages(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error historial:", error);
         setMessages([]);
       } finally {
-        setLoading(false);
+        setCargando(false);
       }
 
       const token = localStorage.getItem("token");
@@ -84,7 +84,7 @@ export default function Chat() {
                   contenido: mensaje.contenido,
                   fechaEnvio: mensaje.fechaEnvio,
                   emisorNombre: mensaje.emisorNombre,
-                  esMio: mensaje.emisorId === user?.id,
+                  esMio: mensaje.emisorId === usuario?.id,
                 },
               ];
             });
@@ -94,7 +94,7 @@ export default function Chat() {
           console.error("🔴 Error conexión SignalR:", e);
         });
     }
-  }, [connection, reservaId, user?.id]);
+  }, [connection, reservaId, usuario?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -105,7 +105,7 @@ export default function Chat() {
     if (!newMessage.trim()) return;
 
     try {
-      await chatAPI.sendMessage({
+      await apiChat.enviarMensaje({
         reservaId: parseInt(reservaId),
         contenido: newMessage,
       });
@@ -116,7 +116,7 @@ export default function Chat() {
     }
   };
 
-  if (loading)
+  if (cargando)
     return (
       <div className="h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -128,7 +128,7 @@ export default function Chat() {
       {/* CABECERA REDISEÑADA CON FOTO Y NOMBRE */}
       <div className="flex items-center gap-4 py-4 border-b border-white/10 mb-4 bg-[#0a0a0a]/80 backdrop-blur-md rounded-2xl px-6 sticky top-0 z-10 mt-4 shadow-lg">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navegar(-1)}
           className="text-gray-400 hover:text-white transition-colors"
         >
           <ArrowLeft size={24} />

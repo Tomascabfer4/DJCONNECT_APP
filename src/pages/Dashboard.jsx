@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { djsAPI, statsAPI } from "../services/api";
+import { apiDjs, apiEstadisticas } from "../services/api";
 import DJCard from "../components/DJCard";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,7 +20,7 @@ import {
 import { toast } from "react-toastify";
 
 // Hook para no saturar el backend con peticiones en cada tecla
-const useDebounce = (value, delay) => {
+const useRetraso = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValue(value), delay);
@@ -30,33 +30,33 @@ const useDebounce = (value, delay) => {
 };
 
 export default function Dashboard() {
-  const { isDJ } = useAuth();
-  return isDJ ? <DJDashboard /> : <ClientDashboard />;
+  const { esDJ } = useAuth();
+  return esDJ ? <DJDashboard /> : <ClientDashboard />;
 }
 
 // === VISTA PARA EL DJ (Panel de Control) ===
 function DJDashboard() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const [estadisticas, setEstadisticas] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const navegar = useNavigate();
+  const { usuario } = useAuth();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data } = await statsAPI.getDashboard();
-        setStats(data);
+        const { data } = await apiEstadisticas.obtenerDashboard();
+        setEstadisticas(data);
       } catch (error) {
-        console.error("Error stats:", error);
+        console.error("Error estadisticas:", error);
         toast.error("No se pudieron cargar las estadísticas.");
       } finally {
-        setLoading(false);
+        setCargando(false);
       }
     };
     fetchStats();
   }, []);
 
-  if (loading)
+  if (cargando)
     return (
       <div className="h-64 flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -68,7 +68,7 @@ function DJDashboard() {
       {/* HEADER */}
       <div>
         <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
-          Hola, <span className="text-primary">{user?.nombre || "DJ"}</span> 👋
+          Hola, <span className="text-primary">{usuario?.nombre || "DJ"}</span> 👋
         </h1>
         <p className="text-gray-400 mt-2 text-lg">
           Aquí tienes el resumen de tu imperio musical.
@@ -76,7 +76,7 @@ function DJDashboard() {
       </div>
 
       {/* BANNER: PRÓXIMO EVENTO (Si existe) */}
-      {stats?.proximoEvento && (
+      {estadisticas?.proximoEvento && (
         <div className="glass-panel border border-primary/30 bg-linear-to-r from-primary/10 via-transparent to-transparent p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden group hover:border-primary/50 transition-colors duration-500">
           <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/20 blur-3xl rounded-full group-hover:bg-primary/30 transition-colors duration-700" />
 
@@ -89,25 +89,25 @@ function DJDashboard() {
                 Siguiente parada
               </p>
               <h3 className="text-white font-extrabold text-2xl md:text-3xl">
-                {stats.proximoEvento.clienteNombre}
+                {estadisticas.proximoEvento.clienteNombre}
               </h3>
               <p className="text-gray-300 text-sm flex items-center gap-3 mt-2 font-medium">
                 <span className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded-md border border-white/10">
                   <Calendar size={14} className="text-gray-400" />
-                  {new Date(stats.proximoEvento.fechaEvento).toLocaleDateString(
+                  {new Date(estadisticas.proximoEvento.fechaEvento).toLocaleDateString(
                     "es-ES",
                     { day: "numeric", month: "short" },
                   )}
                 </span>
                 <span className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded-md border border-white/10">
                   <MapPin size={14} className="text-gray-400" />
-                  {stats.proximoEvento.ubicacionEvento}
+                  {estadisticas.proximoEvento.ubicacionEvento}
                 </span>
               </p>
             </div>
           </div>
           <button
-            onClick={() => navigate("/reservas")}
+            onClick={() => navegar("/reservas")}
             className="btn-primary py-3 px-6 rounded-xl font-bold whitespace-nowrap flex items-center gap-2 group relative z-10 shadow-lg"
           >
             Ver Detalles{" "}
@@ -130,20 +130,20 @@ function DJDashboard() {
           </div>
           <p className="text-gray-400 text-sm font-medium">Ingresos Totales</p>
           <h3 className="text-3xl font-black text-white mt-1">
-            {stats?.ingresos?.toLocaleString("es-ES") || 0}€
+            {estadisticas?.ingresos?.toLocaleString("es-ES") || 0}€
           </h3>
         </div>
 
         {/* Pendientes */}
         <div
           className="glass-panel p-6 rounded-3xl border border-yellow-500/20 bg-linear-to-br from-yellow-500/5 to-transparent cursor-pointer hover:-translate-y-1 hover:border-yellow-500/40 transition-all duration-300 group"
-          onClick={() => navigate("/reservas")}
+          onClick={() => navegar("/reservas")}
         >
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-400 group-hover:scale-110 transition-transform">
               <Clock size={24} />
             </div>
-            {stats?.pendientes > 0 && (
+            {estadisticas?.pendientes > 0 && (
               <span className="flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
@@ -154,7 +154,7 @@ function DJDashboard() {
             Solicitudes Pendientes
           </p>
           <h3 className="text-3xl font-black text-white mt-1">
-            {stats?.pendientes || 0}
+            {estadisticas?.pendientes || 0}
           </h3>
         </div>
 
@@ -167,7 +167,7 @@ function DJDashboard() {
           </div>
           <p className="text-gray-400 text-sm font-medium">Bolos Confirmados</p>
           <h3 className="text-3xl font-black text-white mt-1">
-            {stats?.totalEventos || 0}
+            {estadisticas?.totalEventos || 0}
           </h3>
         </div>
 
@@ -180,8 +180,8 @@ function DJDashboard() {
           </div>
           <p className="text-gray-400 text-sm font-medium">Valoración Media</p>
           <h3 className="text-3xl font-black text-white mt-1">
-            {stats?.valoracion > 0 ? stats.valoracion.toFixed(1) : "N/A"}
-            {stats?.valoracion > 0 && (
+            {estadisticas?.valoracion > 0 ? estadisticas.valoracion.toFixed(1) : "N/A"}
+            {estadisticas?.valoracion > 0 && (
               <span className="text-sm text-yellow-500 ml-1">★</span>
             )}
           </h3>
@@ -193,39 +193,39 @@ function DJDashboard() {
 
 // === VISTA PARA EL CLIENTE (Buscador) ===
 function ClientDashboard() {
-  const [djs, setDjs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [listaDjs, setListaDjs] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
   const [nombre, setNombre] = useState("");
   const [genero, setGenero] = useState("");
   const [ubicacion, setUbicacion] = useState("");
   const [precioMax, setPrecioMax] = useState("");
 
-  const debouncedNombre = useDebounce(nombre, 500);
-  const debouncedGenero = useDebounce(genero, 500);
-  const debouncedUbicacion = useDebounce(ubicacion, 500);
-  const debouncedPrecio = useDebounce(precioMax, 500);
+  const nombreConRetraso = useRetraso(nombre, 500);
+  const generoConRetraso = useRetraso(genero, 500);
+  const ubicacionConRetraso = useRetraso(ubicacion, 500);
+  const precioConRetraso = useRetraso(precioMax, 500);
 
   useEffect(() => {
-    const searchDJs = async () => {
-      setLoading(true);
+    const buscarDjs = async () => {
+      setCargando(true);
       try {
-        const { data } = await djsAPI.search({
-          nombre: debouncedNombre || null,
-          genero: debouncedGenero || null,
-          ubicacion: debouncedUbicacion || null,
-          precioMax: debouncedPrecio || null,
+        const { data } = await apiDjs.buscar({
+          nombre: nombreConRetraso || null,
+          genero: generoConRetraso || null,
+          ubicacion: ubicacionConRetraso || null,
+          precioMax: precioConRetraso || null,
         });
-        setDjs(data);
+        setListaDjs(data);
       } catch (error) {
         console.error("Error buscando:", error);
         toast.error("Error al filtrar DJs.");
       } finally {
-        setLoading(false);
+        setCargando(false);
       }
     };
-    searchDJs();
-  }, [debouncedNombre, debouncedGenero, debouncedUbicacion, debouncedPrecio]);
+    buscarDjs();
+  }, [nombreConRetraso, generoConRetraso, ubicacionConRetraso, precioConRetraso]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-10 pt-6 px-4">
@@ -324,17 +324,17 @@ function ClientDashboard() {
       </div>
 
       {/* RESULTADOS */}
-      {loading ? (
+      {cargando ? (
         <div className="h-64 flex items-center justify-center">
           <Loader2 className="animate-spin text-primary" size={48} />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {djs.map((dj) => (
+          {listaDjs.map((dj) => (
             <DJCard key={dj.id} dj={dj} />
           ))}
 
-          {djs.length === 0 && (
+          {listaDjs.length === 0 && (
             <div className="col-span-full py-24 text-center glass-panel rounded-3xl border border-dashed border-white/10 bg-white/5">
               <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Sparkles className="text-gray-500" size={32} />
