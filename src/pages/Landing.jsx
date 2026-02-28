@@ -157,11 +157,11 @@ export default function Landing() {
 
             <h1
               id="hero-title"
-              className="text-6xl md:text-8xl font-black leading-tight tracking-tight text-white drop-shadow-2xl"
+              className="text-3xl md:text-7xl font-black leading-tight tracking-tight text-white drop-shadow-2xl mb-10"
             >
-              Siente el <br />
+              La plataforma líder para <br />
               <span className="text-transparent bg-clip-text bg-linear-to-r from-primary via-purple-400 to-secondary">
-                Ritmo Real
+                contratar DJs profesionales
               </span>
             </h1>
 
@@ -169,8 +169,9 @@ export default function Landing() {
               id="hero-subtitle"
               className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed drop-shadow-md bg-black/20 p-4 rounded-2xl backdrop-blur-sm"
             >
-              Conectamos a los mejores <strong>DJs</strong> con organizadores de
-              eventos y amantes de la música. Sin intermediarios, todo directo.
+              Conectamos el mejor talento musical con
+              <strong> eventos, clubs y fiestas privadas.</strong> Sin
+              intermediarios y con gestión directa desde la app.
             </p>
           </div>
         </section>
